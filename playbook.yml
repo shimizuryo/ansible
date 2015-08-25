@@ -1,0 +1,45 @@
+---
+- hosts: word
+  sudo: yes
+  tasks:
+    - name: add rpm nginx
+      yum: name=http://nginx.org/packages/centos/6/noarch/RPMS/nginx-release-centos-6-0.el6.ngx.noarch.rpm state=present
+    - name: install nginx
+      yum: name=nginx state=present
+    - name: service start nginx
+      service: name=nginx state=started enabled=yes
+  # tasks:
+    - name: install php php-fpm php-mysql
+      yum: name={{ item }} state=present
+      with_items:
+        - php
+        - php-fpm
+        - php-mysql
+    - name: service start php-fpm
+      service: name=php-fpm state=started enabled=yes
+    - name: change permisson session
+      file: path=/var/lib/php/session state=directory owner=nginx group=nginx
+  # tasks:
+    - name: install python-devel
+      yum: name=python-devel state=present
+  # tasks:
+    - name: install mysql-server mysql-devel mysql-python
+      yum: name={{ item  }} state=present
+      with_items:
+        - mysql-server
+        - mysql-devel
+        - MySQL-python
+    - name: service start mysql
+      service: name=mysqld state=started enabled=yes
+    - name: add mysql database
+      mysql_db: db=wordpressdb state=present encoding=utf8
+    - name: add mysql user
+      mysql_user: name=wordpress password=wordpress priv=wordpressdb.*:ALL state=present
+  # tasks:
+    - name: add wordpress
+      get_url: url=http://ja.wordpress.org/wordpress-3.9.1-ja.tar.gz dest=/usr/share/nginx/html/
+    - name: tar.gz unarchive
+      command: tar zxvf /usr/share/nginx/html/wordpress-3.9.1-ja.tar.gz chdir=/usr/share/nginx/html/
+      # unarchive: src=/usr/share/nginx/html/wordpress-3.9.1-ja.tar.gz dest=/usr/share/nginx/html/
+    - name: change permisson wordpress
+      file: path=/usr/share/nginx/html/wordpress state=directory recurse=yes owner=nginx group=nginx 
